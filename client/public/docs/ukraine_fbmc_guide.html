@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PyPSA Ukraine FBMC &mdash; User's Guide</title>
+<style>
+  :root { --blue:#2563eb; --blue-dark:#1e40af; --ink:#111827; --body:#374151; --muted:#6b7280; --line:#e5e7eb; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#f9fafb; color:var(--body);
+    font-family:Inter,"Segoe UI",system-ui,-apple-system,sans-serif;
+    font-size:15px; line-height:1.65; }
+  .wrap { max-width:880px; margin:0 auto; padding:28px 20px 64px; }
+  header.hero { background:#fff; border:1px solid var(--line); border-radius:16px;
+    padding:28px 28px 22px; margin-bottom:22px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+  .kicker { color:var(--blue); font-weight:600; letter-spacing:.08em;
+    text-transform:uppercase; font-size:.72rem; }
+  h1 { color:var(--ink); font-size:1.9rem; margin:.2rem 0 .4rem; line-height:1.2; }
+  .lede { margin:0; }
+  .back { display:inline-block; margin-top:14px; color:var(--blue);
+    text-decoration:none; font-weight:500; font-size:.9rem; }
+  .back:hover { color:var(--blue-dark); }
+  section.card { background:#fff; border:1px solid var(--line); border-radius:14px;
+    padding:22px 24px; margin-bottom:20px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+  h2 { color:var(--ink); font-size:1.3rem; margin:0 0 12px; }
+  h2 .no { color:var(--blue); }
+  h3 { color:var(--ink); font-size:1.02rem; margin:18px 0 6px; }
+  p { margin:.5rem 0; }
+  ul,ol { margin:.4rem 0 .8rem; padding-left:1.3rem; }
+  li { margin:.25rem 0; }
+  table { width:100%; border-collapse:collapse; margin:10px 0 14px; font-size:.9rem; }
+  th { text-align:left; background:#f3f4f6; color:var(--ink); font-weight:600; }
+  th,td { border:1px solid var(--line); padding:8px 10px; vertical-align:top; }
+  code,.mono { font-family:"Cascadia Code",Consolas,Menlo,monospace; font-size:.85em;
+    background:#f3f4f6; padding:1px 5px; border-radius:4px; color:#1f2937; }
+  .note { background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px;
+    padding:10px 14px; margin:12px 0; color:#1e3a8a; font-size:.92rem; }
+  .warn { background:#fffbeb; border:1px solid #fde68a; border-radius:10px;
+    padding:10px 14px; margin:12px 0; color:#92400e; font-size:.92rem; }
+  footer { color:var(--muted); font-size:.85rem; text-align:center; margin-top:26px; }
+  a { color:var(--blue); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="kicker">EnSolve Cloud Model Platform</div>
+  <h1>PyPSA Ukraine FBMC &mdash; User's Guide</h1>
+  <p class="lede">Everything you need to configure, run and interpret the flow-based
+  market coupling (FBMC) model of the European day-ahead electricity market with a
+  high-resolution Ukrainian network &mdash; from the model's web interface.</p>
+  <a class="back" href="/ukraine/overview">&larr; Back to the model overview</a>
+</header>
+
+<section class="card">
+  <h2><span class="no">1.</span> About the model</h2>
+  <p>Flow-based market coupling (FBMC) is the capacity-allocation method used in
+  most of continental Europe's day-ahead market: instead of fixed cross-border
+  exchange limits, it computes an hourly <em>flow-based domain</em> &mdash; a set of
+  constraints on zonal net positions derived from the physical grid. The market is
+  then cleared as a single optimization that respects that domain, producing zonal
+  day-ahead prices and cross-border flows.</p>
+  <p>This model couples a high-resolution, nodal PyPSA-Eur network of Ukraine and
+  Moldova to the rest of Europe, aggregates both sides into country bidding zones,
+  and clears the coupled zonal market with Gurobi (HiGHS fallback) for any window
+  of the 2023 reference year, with optional N-1 security constraints. The
+  methodology and the underlying code are released as the
+  open-source <a href="https://github.com/WouterKoksNL/pypsa-fbmc">pypsa-fbmc</a>
+  project; this platform runs their implementation as a web service.</p>
+  <div class="note"><strong>What you get:</strong> hourly zonal day-ahead prices,
+  zonal net positions (exports/imports), generation mix, load shedding, the
+  binding critical network elements that shaped prices, window KPIs, and CSV
+  downloads of everything.</div>
+</section>
+
+<section class="card">
+  <h2><span class="no">2.</span> Quick workflow</h2>
+  <p>The model's left-hand menu has four steps, in order:</p>
+  <ol>
+    <li><strong>Configure</strong> &mdash; pick a scenario, a time window inside
+      2023, security level (N-0/N-1), a GSK strategy, a base case and the value of
+      lost load. Save your configuration under a name.</li>
+    <li><strong>Run</strong> &mdash; give the run a name and press
+      <em>Run Ukraine model</em>. Progress streams live into the console; you also
+      receive an email when the run completes (or fails).</li>
+    <li><strong>Results</strong> &mdash; KPIs, charts and per-file downloads for
+      any successful run (see section 5).</li>
+    <li><strong>History</strong> &mdash; all past runs; reopen or re-download
+      any of them.</li>
+  </ol>
+  <p>Typical durations on the platform's compute box: <strong>N-0 &asymp; 3
+  minutes per window day</strong>, <strong>N-1 &asymp; 24 minutes per window
+  day</strong> (measured). Long windows are solved automatically in chunks
+  (up to 7&nbsp;days per chunk for N-0, 1&nbsp;day for N-1) and the results are
+  stitched back together.</p>
+</section>
+
+<section class="card">
+  <h2><span class="no">3.</span> Configuration variables</h2>
+  <p>Everything on the Configure tab, what it means, and its default.</p>
+  <table>
+    <tr><th style="width:170px">Variable</th><th style="width:190px">Options</th><th>What it means</th></tr>
+    <tr>
+      <td><strong>Scenario</strong><br><span class="mono">red&sup1;</span></td>
+      <td>Base scenario &middot; Reduced generator fleet &middot; Reduced fleet + load stress</td>
+      <td>Which 2023 network dataset to clear. <em>Base scenario</em> is the full
+        Ukrainian generation fleet as modelled for 2023; <em>Reduced generator
+        fleet</em> represents a damaged/reduced power system; <em>Reduced fleet +
+        load stress</em> additionally stresses the demand side.</td>
+    </tr>
+    <tr>
+      <td><strong>Window start / end</strong></td>
+      <td><span class="mono">2023-01-01 00:00:00</span> &hellip; <span class="mono">2023-12-31 23:00:00</span>, at most 7 days</td>
+      <td>Hourly snapshots to clear (inclusive on both ends, hour precision).
+        The default is the validation reference day
+        (<span class="mono">2023-01-15 00:00:00 &ndash; 23:00:00</span>). End the
+        last day with <span class="mono">23:00:00</span>, not midnight.</td>
+    </tr>
+    <tr>
+      <td><strong>Security constraints</strong><br><span class="mono">off&sup1;</span></td>
+      <td>N-0 (off) &middot; N-1 (on)</td>
+      <td><em>off</em>: only intact-network (N-0) constraints shape the flow-based
+        domain. <em>on</em>: the domain must also hold if any single critical
+        branch trips (N-1), which shrinks cross-border capacity, separates prices
+        more, and costs &asymp;8&times; the runtime. The modes also pair with
+        different reliability margins on the critical branch limits (N-1:
+        0.1, N-0: 0.5 &mdash; the model's production pairing).</td>
+    </tr>
+    <tr>
+      <td><strong>GSK strategy</strong><br><span class="mono">P_NOM&sup1;</span></td>
+      <td>7 strategies (below)</td>
+      <td>Generation Shift Key &mdash; how a change in a zone's net position is
+        distributed over the nodes inside the zone when converting nodal physics
+        into zonal constraints.</td>
+    </tr>
+    <tr>
+      <td><strong>Base case</strong><br><span class="mono">ZERO_FLOWS&sup1;</span></td>
+      <td>ZERO_FLOWS &middot; NODAL_OPTIMUM</td>
+      <td>The reference dispatch the flow-based domain is computed around:
+        cross-border flows assumed zero (standard, fast) or the cost-optimal
+        nodal dispatch (more realistic reference flows, slower).</td>
+    </tr>
+    <tr>
+      <td><strong>Value of lost load</strong><br><span class="mono">5000&sup1; EUR/MWh</span></td>
+      <td>1 &ndash; 100,000 EUR/MWh</td>
+      <td>Cost per MWh of unserved energy. Zones can always shed load at this
+        price, so it is effectively the price ceiling; lower it to see hours
+        where the flow-based domain cannot deliver demand.</td>
+    </tr>
+  </table>
+  <p><sup>1</sup> Default value.</p>
+
+  <h3>GSK strategies in one line each</h3>
+  <ul>
+    <li><span class="mono">P_NOM</span> &mdash; each node responds proportionally
+      to its generation capacity (p_nom). <strong>The default on this
+      platform.</strong></li>
+    <li><span class="mono">BUS_P</span> &mdash; proportional to the node's current
+      power injection in the base case.</li>
+    <li><span class="mono">CURRENT_GENERATION</span> &mdash; proportional to current
+      generation output.</li>
+    <li><span class="mono">MERIT_ORDER</span> &mdash; generators respond in merit
+      order (cheapest first).</li>
+    <li><span class="mono">ADJUSTABLE_CAP</span> &mdash; only dispatchable carriers
+      (gas, coal, lignite, oil) respond, proportional to their adjustable
+      capacity.</li>
+    <li><span class="mono">ITERATIVE_UNCERTAINTY</span> &mdash; Monte-Carlo sampling
+      of wind uncertainty, refined iteratively (slow).</li>
+    <li><span class="mono">ITERATIVE_FBMC</span> &mdash; GSK refined iteratively
+      from FBMC outcomes, starting from BUS_P (slow).</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2><span class="no">4.</span> Running a window</h2>
+  <ol>
+    <li>Open <strong>Run</strong>, type a <strong>Run name</strong> (required &mdash;
+      it labels the run in your history) and press <em>Run Ukraine model</em>.</li>
+    <li>The <strong>live output</strong> console below the button streams progress
+      line by line. Long windows show <span class="mono">[chunk k/n]</span>
+      prefixes &mdash; the solver works through your window chunk by chunk and
+      stitches the results automatically.</li>
+    <li>When the run finishes you get an <strong>email</strong> (success or
+      failure), and the run appears under <strong>Recent runs</strong> and in
+      <strong>History</strong>. Open the <strong>Results</strong> tab to explore
+      it.</li>
+  </ol>
+
+  <h3>What to expect</h3>
+  <ul>
+    <li><strong>Runtime:</strong> &asymp; 3 min per window day for N-0,
+      &asymp; 24 min per window day for N-1 (the Configure tab shows a live
+      estimate). A 7-day N-1 window therefore takes several hours.</li>
+    <li><strong>One model run at a time:</strong> the platform allows a single
+      heavy run globally. While your Ukraine run solves, launching other models
+      (and vice versa) is refused with a &ldquo;blocked by another run&rdquo;
+      message &mdash; just try again once it finishes.</li>
+    <li><strong>Duplicate reuse:</strong> if a run with an identical configuration
+      already succeeded, the platform returns the stored results immediately and
+      marks the run <em>(reused)</em> in history &mdash; no re-solve.</li>
+    <li><strong>Safety rails:</strong> runs have a 6-hour budget and a RAM guard;
+      if either is exceeded the run is killed cleanly, marked failed in your
+      history, and an email is sent. Shrinking the window or switching N-1 to N-0
+      fixes overruns.</li>
+  </ul>
+  <div class="warn"><strong>Window format matters:</strong> timestamps look like
+  <span class="mono">2023-06-01 08:00:00</span> &mdash; hour precision, both ends
+  inclusive, inside 2023. The most common rejected run is a window ending at
+  midnight (<span class="mono">00:00:00</span>) or extending past
+  <span class="mono">2023-12-31 23:00:00</span>; end the last day at
+  <span class="mono">23:00:00</span> instead.</div>
+</section>
+
+<section class="card">
+  <h2><span class="no">5.</span> Results &amp; how to interpret them</h2>
+  <p>The <strong>Results</strong> tab summarizes a successful run as KPI cards and
+  charts (zonal price curves, a shedding timeline when shedding occurs, net-export
+  and welfare comparisons between Ukraine and the rest of Europe, and the table of
+  binding critical network elements), with a download button for every result
+  file.</p>
+
+  <h3>The result files, one by one</h3>
+  <table>
+    <tr><th style="width:200px">File</th><th>Contains</th><th>How to read it</th></tr>
+    <tr>
+      <td><span class="mono">market_prices.csv</span></td>
+      <td>Hourly day-ahead price per bidding zone (EUR/MWh).</td>
+      <td>Prices are equal across zones whenever no CNEC binds; a price split
+        means congestion &mdash; see which branch in
+        <span class="mono">cnec_binding.csv</span>.</td>
+    </tr>
+    <tr>
+      <td><span class="mono">net_positions.csv</span></td>
+      <td>Hourly net position per zone (MW).</td>
+      <td>Positive = the zone is a net exporter in that hour. Summing over the
+        window (and multiplying by 1&nbsp;h) gives net exported energy.</td>
+    </tr>
+    <tr>
+      <td><span class="mono">generation_mix.csv</span></td>
+      <td>Hourly dispatch by zone and carrier (MW).</td>
+      <td>The generation stack behind the prices &mdash; e.g. how much of
+        Ukraine's hours are hydro, nuclear, solar, wind.</td>
+    </tr>
+    <tr>
+      <td><span class="mono">load_shedding.csv</span></td>
+      <td>Hourly unserved load per zone (MW).</td>
+      <td>Zero in a healthy clearing. Any positive value marks an hour in which
+        demand could not be delivered inside the flow-based domain &mdash; the
+        hours the grid (not the market) is the binding constraint.</td>
+    </tr>
+    <tr>
+      <td><span class="mono">cnec_binding.csv</span></td>
+      <td>Critical network elements (branch + outage) that bound the domain.</td>
+      <td>Each row shows how many hours the element bound and its maximum shadow
+        price (EUR/MWh) &mdash; the congestion cost of that line limit. This table
+        explains the price splits.</td>
+    </tr>
+    <tr>
+      <td><span class="mono">kpis.json</span></td>
+      <td>Window-level and per-zone KPIs: mean/max prices, load and generation
+        totals, net import, shed MWh, consumer expense, producer revenue and
+        congestion-rent contribution.</td>
+      <td>The quick-scan summary of a window; compare runs by diffing these
+        numbers.</td>
+    </tr>
+    <tr>
+      <td><span class="mono">run_meta.json</span></td>
+      <td>The effective configuration, per-chunk timings and peak memory.</td>
+      <td>Provenance &mdash; what exactly produced these numbers, and how hard
+        it was.</td>
+    </tr>
+  </table>
+
+  <h3>Reading the welfare split</h3>
+  <p>The KPI welfare terms decompose the market outcome per zone:
+  <em>consumer expense</em> is load&nbsp;&times;&nbsp;price (what demand pays),
+  <em>producer revenue</em> is generation&nbsp;&times;&nbsp;price (what supply
+  earns), and the <em>congestion-rent contribution</em> is the value captured by
+  the flow-based domain's binding constraints. Comparing Ukraine/Moldova against
+  the rest of Europe shows who benefits from coupling in the chosen window.</p>
+
+  <h3>Comparing configurations</h3>
+  <ul>
+    <li><strong>N-0 vs N-1:</strong> switching security on adds contingency
+      constraints &mdash; expect a smaller flow-based domain, lower cross-border
+      capacity, larger price splits and (in extreme scenarios) more shedding.
+      (Reliability margins: N-1 &rarr; 0.1, N-0 &rarr; 0.5.)</li>
+    <li><strong>base vs red vs redload:</strong> the reduced-fleet scenarios show
+      how a damaged Ukrainian power system leans on imports, sheds load when the
+      domain cannot deliver, and decouples from European prices.</li>
+    <li><strong>VOLL:</strong> lowering the value of lost load reveals scarcity
+      hours earlier (shedding appears at lower prices) &mdash; useful for
+      stress-testing, but it also lowers the model's price ceiling.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2><span class="no">6.</span> Tips &amp; troubleshooting</h2>
+  <ul>
+    <li><strong>Start small.</strong> A single reference day (the default window)
+      validates your setup in minutes; extend to a week once it behaves as
+      expected.</li>
+    <li><strong>Validation errors are reported per field</strong> &mdash; the
+      message names the exact rule violated (window bounds, the 7-day cap, hour
+      precision, VOLL range), so fix the named field and re-save.</li>
+    <li><strong>&ldquo;Blocked by another run&rdquo;</strong> means some model
+      (possibly another user's) is currently solving on the shared compute box.
+      Nothing is lost &mdash; re-launch when it clears.</li>
+    <li><strong>A failed run does not block a retry</strong> &mdash; failures are
+      kept in History with their last output for diagnosis, and the same
+      configuration can be relaunched immediately (identical <em>successful</em>
+      runs are the only ones reused).</li>
+    <li><strong>Where results live:</strong> every run keeps its files on the
+      platform; History re-opens and re-downloads them at any time.</li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2><span class="no">7.</span> Credits &amp; references</h2>
+  <p>The flow-based market coupling methodology and the model code for the
+  Ukrainian network were developed by <strong>Wouter Koks</strong> and
+  <strong>Amel de Kok</strong>, released as the open-source
+  <a href="https://github.com/WouterKoksNL/pypsa-fbmc">pypsa-fbmc</a>
+  project built on
+  <a href="https://github.com/PyPSA/PyPSA">PyPSA</a> and
+  <a href="https://github.com/PyPSA/pypsa-eur">PyPSA-Eur</a>. This platform wraps
+  their implementation as a web service; market clearing uses
+  <a href="https://www.gurobi.com/">Gurobi</a> with HiGHS as fallback.</p>
+  <p>Questions about the platform or access: contact the platform administrator.
+  Questions about the methodology: the repository above.</p>
+</section>
+
+<footer>
+  PyPSA Ukraine FBMC &mdash; user's guide &middot; EnSolve Cloud Model Platform &middot;
+  model by Wouter Koks &amp; Amel de Kok
+</footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+# Production deployment for the Energy Cloud Hub platform (API, client, MongoDB).
+#
+# Model execution backends are deployment-specific: the API can dispatch runs to
+# remote compute nodes via SSH (see server/.env.production.example, REMOTE_RUNNER_*).
+# If your deployment needs an SSH key inside the API container, mount it at
+# /run/keys/<your-key> and configure REMOTE_RUNNER_SSH_OPTIONS accordingly.
+
+services:
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: ensolve-api-prod
+    restart: unless-stopped
+    env_file:
+      - ./server/.env.production
+    environment:
+      ENSOLVE_ROOT: ${ENSOLVE_ROOT:-/workspace}
+      MONGO_URL: ${MONGO_URL:-mongodb://mongo:27017/empire_runs}
+      MODEL_RESULTS_ROOT: ${MODEL_RESULTS_ROOT:-/var/www/results}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:4000:4000"
+    volumes:
+      - ./:/workspace
+      - results_data:/var/www/results
+      # Example (mount an SSH key for remote orchestration):
+      # - /path/to/id_ed25519_your_deploy_key:/run/keys/id_ed25519_your_deploy_key:ro
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile.production
+    container_name: ensolve-client-prod
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:3000:80"
+
+  mongo:
+    image: mongo:7
+    container_name: ensolve-mongo-prod
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.runCommand({ ping: 1 }).ok\" | grep 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+  results_data:

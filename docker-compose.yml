@@ -1,0 +1,42 @@
+services:
+  api:
+    build: ./server
+    container_name: ensolve-api
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./server/.env
+    environment:
+      EMAIL_HOST: mailpit
+      EMAIL_PORT: "1025"
+      EMAIL_SECURE: "false"
+      EMAIL_USER: "any"
+      EMAIL_PASSWORD: "any"
+      EMAIL_FROM: "no-reply@local.test"
+      ENSOLVE_ROOT: /workspace
+      MONGO_URL: mongodb://mongo:27017/empire_runs
+    depends_on:
+      - mongo
+      - mailpit
+    volumes:
+      - ./server:/app
+      - ../:/workspace
+    command: node server.js
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: ensolve-mailpit
+    ports:
+      - "8025:8025"   # web UI
+      - "1025:1025"   # SMTP
+
+  mongo:
+    image: mongo:8
+    container_name: ensolve-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

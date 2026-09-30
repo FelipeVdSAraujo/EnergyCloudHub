@@ -1,0 +1,33 @@
+{
+  "caseType": "case_small",
+  "opPeriods": 168,
+  "opPeriodsDuration": 1,
+  "optimHor": 48,
+  "implHor": 24,
+  "optimizer": "HiGHS.Optimizer",
+  "includeLithiumIon": true,
+  "includePumpedStorage": true,
+  "includeHydroReservoir": true,
+  "generateDispatchPlot": true,
+  "emissionPrice": 30,
+  "resOpex": {
+    "electricitySolarPvUtilityOptimal": 0.0036,
+    "electricityWindOnshoreAverage": 0.18,
+    "electricityWindOffshoreTransitional": 0.39312,
+    "electricityHydroRunOfRiver": 0.0036,
+    "heatSolar": 0.0036
+  },
+  "selectedCountries": {
+    "DE": true,
+    "DK": true,
+    "NL": true,
+    "NO": true,
+    "UK": true
+  },
+  "selectedOutputVariables": [
+    "flow_out",
+    "emissions_node",
+    "trans_in",
+    "trans_out"
+  ]
+}

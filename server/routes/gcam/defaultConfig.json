@@ -1,0 +1,11 @@
+{
+  "gcamHome": "C:\\EnSolveCloudGCAM",
+  "configurationFile": "configuration_ref.xml",
+  "scenarioName": "GCAM_Web_Ref",
+  "useBatchMode": false,
+  "batchFileName": "batch_SSP_REF.xml",
+  "stopPeriod": -1,
+  "createCostCurve": false,
+  "findPath": false,
+  "notes": "Reference configuration for web-triggered GCAM runs"
+}

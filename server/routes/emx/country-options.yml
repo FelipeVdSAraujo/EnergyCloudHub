@@ -1,0 +1,16 @@
+countries:
+  - code: DE
+    name: Germany
+    defaultIncluded: true
+  - code: DK
+    name: Denmark
+    defaultIncluded: true
+  - code: NL
+    name: Netherlands
+    defaultIncluded: true
+  - code: NO
+    name: Norway
+    defaultIncluded: true
+  - code: UK
+    name: Great Britain
+    defaultIncluded: true

@@ -1,0 +1,36 @@
+{
+  "yInit": 2020,
+  "horizonYears": 31,
+  "preYears": 25,
+  "discountRate": 0.05,
+  "gamma": 0.0003,
+  "budgetPenaltyPlus": 1000,
+  "budgetPenaltyMinus": 100,
+  "alphaF": 0.1,
+  "betaF": 0.1,
+  "alphaH": 0.1,
+  "betaH": 0.1,
+  "optimizer": "Gurobi.Optimizer",
+  "constraints": {
+    "demandCoverage": true,
+    "vehicleSizing": true,
+    "vehicleAging": true,
+    "fuelingDemand": true,
+    "vehicleStockShift": true,
+    "modeShift": true,
+    "fuelingInfrastructure": true,
+    "modeInfrastructure": true,
+    "monetaryBudget": false,
+    "modeShareExact": false,
+    "modeShareMin": false,
+    "modeShareMax": false,
+    "marketShare": false,
+    "emissionsByMode": false,
+    "supplyInfrastructure": false
+  },
+  "solverOptions": {
+    "mipGap": 1e-9,
+    "timeLimitSeconds": 0,
+    "threads": 0
+  }
+}
